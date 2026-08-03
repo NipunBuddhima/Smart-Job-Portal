@@ -32,8 +32,30 @@ export const Dashboard = () => {
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            to="/profile"
+            to="/jobs"
             className="rounded-xl bg-cyan-400 px-4 py-3 font-medium text-slate-950 transition hover:bg-cyan-300"
+          >
+            Open jobs
+          </Link>
+          {user?.role === 'candidate' && (
+            <Link
+              to="/candidate/applied-jobs"
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-medium text-white transition hover:bg-white/10"
+            >
+              My applications
+            </Link>
+          )}
+          {user?.role === 'employer' && (
+            <Link
+              to="/jobs/new"
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-medium text-white transition hover:bg-white/10"
+            >
+              Post a job
+            </Link>
+          )}
+          <Link
+            to="/profile"
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-medium text-white transition hover:bg-white/10"
           >
             Edit profile
           </Link>

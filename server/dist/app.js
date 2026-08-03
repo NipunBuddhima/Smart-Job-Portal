@@ -12,6 +12,8 @@ const errorHandler_1 = require("./middleware/errorHandler");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
+const job_routes_1 = __importDefault(require("./routes/job.routes"));
+const application_routes_1 = __importDefault(require("./routes/application.routes"));
 const app = (0, express_1.default)();
 // Secure HTTP headers
 app.use((0, helmet_1.default)());
@@ -40,6 +42,8 @@ app.get('/health', (req, res) => {
 // e.g., app.use('/api/jobs', jobRoutes);
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/users', user_routes_1.default);
+app.use('/api/jobs', job_routes_1.default);
+app.use('/api/applications', application_routes_1.default);
 // Catch-all route for undefined endpoints
 app.use(errorHandler_1.notFoundHandler);
 // Centralized error handling (Must be the very last middleware)

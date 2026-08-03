@@ -34,6 +34,7 @@ export interface IUser extends Document {
   education?: IEducationEntry[];
   experience?: IExperienceEntry[];
   socialLinks?: ISocialLinks;
+  savedJobs?: mongoose.Types.ObjectId[];
   companyName?: string;
   companyDescription?: string;
   website?: string;
@@ -88,6 +89,7 @@ const userSchema = new Schema<IUser>(
     education: { type: [educationSchema], default: [] },
     experience: { type: [experienceSchema], default: [] },
     socialLinks: { type: socialLinksSchema, default: () => ({}) },
+    savedJobs: [{ type: Schema.Types.ObjectId, ref: 'Job' }],
     companyName: { type: String, trim: true, default: '' },
     companyDescription: { type: String, trim: true, default: '' },
     website: { type: String, trim: true, default: '' },

@@ -23,6 +23,7 @@ const buildUserResponse = (user) => ({
     companyDescription: user.companyDescription ?? '',
     website: user.website ?? '',
     companyLogo: user.companyLogo ?? '',
+    savedJobs: user.savedJobs ?? [],
 });
 const updateProfile = async (req, res, next) => {
     try {

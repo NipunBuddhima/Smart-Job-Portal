@@ -7,5 +7,6 @@ declare global {
     }
 }
 export declare const protect: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+export declare const attachOptionalUser: (req: Request, _res: Response, next: NextFunction) => Promise<void>;
 export declare const authorize: (...roles: string[]) => (req: Request, res: Response, next: NextFunction) => void;
 //# sourceMappingURL=auth.middleware.d.ts.map

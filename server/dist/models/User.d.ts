@@ -29,6 +29,7 @@ export interface IUser extends Document {
     education?: IEducationEntry[];
     experience?: IExperienceEntry[];
     socialLinks?: ISocialLinks;
+    savedJobs?: mongoose.Types.ObjectId[];
     companyName?: string;
     companyDescription?: string;
     website?: string;

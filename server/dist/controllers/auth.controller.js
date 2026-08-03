@@ -22,6 +22,7 @@ const buildUserResponse = (user) => ({
     companyDescription: user.companyDescription ?? '',
     website: user.website ?? '',
     companyLogo: user.companyLogo ?? '',
+    savedJobs: user.savedJobs ?? [],
 });
 const sendTokenResponse = (user, statusCode, res) => {
     const { accessToken, refreshToken } = (0, jwt_1.generateTokens)(user._id, user.role);

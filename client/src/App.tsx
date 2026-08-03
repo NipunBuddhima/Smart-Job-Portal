@@ -6,6 +6,11 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Unauthorized } from './pages/Unauthorized';
 import { Profile } from './pages/Profile';
+import { Jobs } from './pages/Jobs';
+import { CreateJob } from './pages/employer/CreateJob';
+import { ApplyJob } from './pages/condidate/ApplyJob';
+import { AppliedJobs } from './pages/condidate/AppliedJobs';
+import { ApplicantTracking } from './pages/employer/ApplicantTracking';
 
 function App() {
   return (
@@ -22,6 +27,18 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/jobs" element={<Jobs />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['candidate']} />}>
+            <Route path="/candidate/applied-jobs" element={<AppliedJobs />} />
+            <Route path="/jobs/:jobId/apply" element={<ApplyJob />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['employer', 'admin']} />}>
+            <Route path="/jobs/new" element={<CreateJob />} />
+            <Route path="/jobs/:jobId/edit" element={<CreateJob />} />
+            <Route path="/jobs/:jobId/applicants" element={<ApplicantTracking />} />
           </Route>
 
           {/* Fallback */}

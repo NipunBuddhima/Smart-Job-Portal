@@ -72,6 +72,7 @@ const userSchema = new mongoose_1.Schema({
     education: { type: [educationSchema], default: [] },
     experience: { type: [experienceSchema], default: [] },
     socialLinks: { type: socialLinksSchema, default: () => ({}) },
+    savedJobs: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Job' }],
     companyName: { type: String, trim: true, default: '' },
     companyDescription: { type: String, trim: true, default: '' },
     website: { type: String, trim: true, default: '' },

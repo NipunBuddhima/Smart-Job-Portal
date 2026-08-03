@@ -33,6 +33,7 @@ interface User {
   companyDescription?: string;
   website?: string;
   companyLogo?: string;
+  savedJobs?: string[];
 }
 
 interface AuthContextType {

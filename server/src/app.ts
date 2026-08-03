@@ -7,6 +7,9 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import jobRoutes from './routes/job.routes';
+import applicationRoutes from './routes/application.routes';
+
 
 const app: Application = express();
 
@@ -45,6 +48,9 @@ app.get('/health', (req: Request, res: Response) => {
 // e.g., app.use('/api/jobs', jobRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/applications', applicationRoutes);
+
 
 // Catch-all route for undefined endpoints
 app.use(notFoundHandler);

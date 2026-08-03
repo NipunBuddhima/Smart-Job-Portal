@@ -14,34 +14,46 @@ declare global {
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let token;
-    
-    // Check cookies for token, fallback to Bearer header
-    if (req.cookies.accessToken) {
-      token = req.cookies.accessToken;
-    } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
+    const currentUser = await resolveUserFromRequest(req);
 
-    if (!token) {
-      return next(new AppError('Not authorized to access this route', 401));
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
-
-    // Check if user still exists
-    const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
       return next(new AppError('The user belonging to this token no longer exists.', 401));
     }
 
-    // Grant access to protected route
     req.user = currentUser;
     next();
   } catch (error) {
     next(new AppError('Invalid or expired token', 401));
   }
+};
+
+const resolveUserFromRequest = async (req: Request) => {
+  let token;
+
+  if (req.cookies.accessToken) {
+    token = req.cookies.accessToken;
+  } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return null;
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
+  const currentUser = await User.findById(decoded.id);
+
+  return currentUser || null;
+};
+
+export const attachOptionalUser = async (req: Request, _res: Response, next: NextFunction) => {
+  try {
+    req.user = await resolveUserFromRequest(req);
+  } catch {
+    req.user = undefined;
+  }
+
+  next();
 };
 
 export const authorize = (...roles: string[]) => {
