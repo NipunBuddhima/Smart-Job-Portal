@@ -27,6 +27,20 @@ export const CandidateProfile = () => {
   const navigate = useNavigate();
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [resumeName, setResumeName] = useState('');
+
+  const getErrorMessage = (error: unknown, fallbackMessage: string) => {
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+      const response = (error as { response?: { data?: { message?: string } } }).response;
+      const message = response?.data?.message;
+
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+    }
+
+    return fallbackMessage;
+  };
 
   const {
     register,
@@ -62,7 +76,7 @@ export const CandidateProfile = () => {
         github: user?.socialLinks?.github || '',
         portfolio: user?.socialLinks?.portfolio || '',
       },
-    }
+    },
   });
 
   const educationFieldArray = useFieldArray({ control, name: 'education' });
@@ -97,8 +111,18 @@ export const CandidateProfile = () => {
     });
   }, [reset, user]);
 
+  useEffect(() => {
+    setResumeName(user?.resumeName || '');
+  }, [user?.resumeName]);
+
   const avatarUrl = user?.avatar || '';
   const resumeUrl = user?.resume || '';
+  const displayedResumeName = resumeName || user?.resumeName || '';
+  const normalizeResumeUrl = (url: string) =>
+    url.replace('/raw/raw/upload/', '/raw/upload/').replace('/image/image/upload/', '/image/upload/');
+  const getResumeViewUrl = (url: string) => normalizeResumeUrl(url);
+  const getResumeDownloadUrl = (url: string) =>
+    normalizeResumeUrl(url).replace('/raw/upload/', '/raw/upload/fl_attachment/');
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,8 +139,8 @@ export const CandidateProfile = () => {
       }
       setError('root', { message: '' });
       e.target.value = '';
-    } catch {
-      setError('root', { message: 'Failed to upload profile picture' });
+    } catch (error) {
+      setError('root', { message: getErrorMessage(error, 'Failed to upload profile picture') });
     } finally {
       setUploadingAvatar(false);
     }
@@ -135,16 +159,16 @@ export const CandidateProfile = () => {
       if (data.user) {
         setUser(data.user);
       }
+      setResumeName(data.user?.resumeName || file.name);
       setError('root', { message: '' });
       e.target.value = '';
-    } catch {
-      setError('root', { message: 'Failed to upload resume' });
+    } catch (error) {
+      setError('root', { message: getErrorMessage(error, 'Failed to upload resume') });
     } finally {
       setUploadingResume(false);
     }
   };
 
-  // Handle standard JSON profile update
   const onSubmit = async (data: CandidateProfileFormValues) => {
     const skills = data.skillsText
       .split(',')
@@ -212,25 +236,41 @@ export const CandidateProfile = () => {
               </label>
 
               <label className="block rounded-2xl border border-white/10 bg-white/5 p-4">
-                <span className="mb-2 block text-sm font-medium text-slate-200">Resume (PDF)</span>
+                <span className="mb-2 block text-sm font-medium text-slate-200">Resume (PDF, DOC, DOCX)</span>
                 <input
                   type="file"
-                  accept="application/pdf"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={handleResumeUpload}
                   disabled={uploadingResume}
                   className="block w-full text-sm text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-400 file:px-4 file:py-2 file:font-medium file:text-slate-950 hover:file:bg-cyan-300"
                 />
-                <p className="mt-2 text-xs text-slate-400">PDF only, up to 5MB.</p>
+                <p className="mt-2 text-xs text-slate-400">PDF, DOC, or DOCX up to 5MB.</p>
                 {uploadingResume && <p className="mt-2 text-sm text-cyan-300">Uploading resume...</p>}
+                {displayedResumeName && (
+                  <p className="mt-2 text-sm text-slate-300">
+                    Current resume: <span className="font-medium text-white">{displayedResumeName}</span>
+                  </p>
+                )}
                 {resumeUrl && (
-                  <a
-                    href={resumeUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                  >
-                    View resume
-                  </a>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <a
+                      href={getResumeViewUrl(resumeUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                    >
+                      View resume
+                    </a>
+                    <a
+                      href={getResumeDownloadUrl(resumeUrl)}
+                      download={displayedResumeName || 'resume.pdf'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-400/20"
+                    >
+                      Download resume
+                    </a>
+                  </div>
                 )}
               </label>
             </div>

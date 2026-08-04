@@ -14,6 +14,7 @@ const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const job_routes_1 = __importDefault(require("./routes/job.routes"));
 const application_routes_1 = __importDefault(require("./routes/application.routes"));
+const dashboard_routes_1 = __importDefault(require("./routes/dashboard.routes"));
 const app = (0, express_1.default)();
 // Secure HTTP headers
 app.use((0, helmet_1.default)());
@@ -26,6 +27,7 @@ app.use((0, cors_1.default)({
 // Body parsers for JSON and URL-encoded payloads
 app.use(express_1.default.json({ limit: '10kb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10kb' }));
+app.use('/uploads', express_1.default.static('uploads'));
 // Pipe Morgan's HTTP request logs into Winston
 const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
 app.use((0, morgan_1.default)(morganFormat, {
@@ -44,6 +46,7 @@ app.use('/api/auth', auth_routes_1.default);
 app.use('/api/users', user_routes_1.default);
 app.use('/api/jobs', job_routes_1.default);
 app.use('/api/applications', application_routes_1.default);
+app.use('/api/dashboard', dashboard_routes_1.default);
 // Catch-all route for undefined endpoints
 app.use(errorHandler_1.notFoundHandler);
 // Centralized error handling (Must be the very last middleware)

@@ -30,6 +30,7 @@ export interface IUser extends Document {
   role: 'candidate' | 'employer' | 'admin';
   avatar?: string;
   resume?: string;
+  resumeName?: string;
   skills?: string[];
   education?: IEducationEntry[];
   experience?: IExperienceEntry[];
@@ -85,6 +86,7 @@ const userSchema = new Schema<IUser>(
     },
     avatar: { type: String, default: '' },
     resume: { type: String, default: '' },
+    resumeName: { type: String, default: '' },
     skills: [{ type: String, trim: true }],
     education: { type: [educationSchema], default: [] },
     experience: { type: [experienceSchema], default: [] },

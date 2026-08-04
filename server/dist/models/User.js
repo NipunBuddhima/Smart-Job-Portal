@@ -68,6 +68,7 @@ const userSchema = new mongoose_1.Schema({
     },
     avatar: { type: String, default: '' },
     resume: { type: String, default: '' },
+    resumeName: { type: String, default: '' },
     skills: [{ type: String, trim: true }],
     education: { type: [educationSchema], default: [] },
     experience: { type: [experienceSchema], default: [] },

@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateApplicationStatus = exports.getJobApplicants = exports.withdrawApplication = exports.getCandidateApplications = exports.applyForJob = void 0;
 const Application_1 = __importDefault(require("../models/Application"));
 const Job_1 = __importDefault(require("../models/Job"));
-const cloudinary_1 = require("../utils/cloudinary");
 const errorHandler_1 = require("../middleware/errorHandler");
+const localFileStorage_1 = require("../utils/localFileStorage");
 const allowedApplicationStatuses = ['pending', 'reviewed', 'shortlisted', 'rejected', 'accepted'];
 const parseApplicationStatus = (value) => {
     if (typeof value !== 'string') {
@@ -34,7 +34,7 @@ const applyForJob = async (req, res, next) => {
         let finalResumeUrl = profileResumeUrl;
         // If candidate uploads a tailored resume just for this application
         if (req.file) {
-            finalResumeUrl = await (0, cloudinary_1.uploadToCloudinary)(req.file.buffer, 'job_portal/applications', 'raw');
+            finalResumeUrl = await (0, localFileStorage_1.saveUploadedFileLocally)(req.file.buffer, 'job_portal/applications', req.file.originalname, req.user.id);
         }
         if (!finalResumeUrl)
             return next(new errorHandler_1.AppError('A resume is required to apply', 400));

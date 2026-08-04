@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { uploadToCloudinary, uploadToCloudinaryWithFilename } from '../utils/cloudinary';
 import { AppError } from '../middleware/errorHandler';
+import { saveUploadedFileLocally } from '../utils/localFileStorage';
 import {
   validateCandidateProfileUpdate,
   validateEmployerProfileUpdate,
@@ -14,6 +15,7 @@ const buildUserResponse = (user: any) => ({
   role: user.role,
   avatar: user.avatar,
   resume: user.resume,
+  resumeName: user.resumeName ?? '',
   skills: user.skills ?? [],
   education: user.education ?? [],
   experience: user.experience ?? [],
@@ -64,10 +66,18 @@ export const uploadUserResume = async (req: Request, res: Response, next: NextFu
   try {
     if (!req.file) return next(new AppError('Please upload a PDF document', 400));
 
-    // resourceType 'raw' is required in Cloudinary for PDFs/Docs
-    const resumeUrl = await uploadToCloudinary(req.file.buffer, 'job_portal/resumes', 'raw');
+    const resumeUrl = await saveUploadedFileLocally(
+      req.file.buffer,
+      'job_portal/resumes',
+      req.file.originalname,
+      req.user.id
+    );
     
-    const user = await User.findByIdAndUpdate(req.user.id, { resume: resumeUrl }, { new: true, runValidators: true });
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { resume: resumeUrl, resumeName: req.file.originalname },
+      { new: true, runValidators: true }
+    );
     res.status(200).json({ success: true, resumeUrl: user?.resume, user: buildUserResponse(user) });
   } catch (error) {
     next(error);

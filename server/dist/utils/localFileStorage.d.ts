@@ -1,0 +1,2 @@
+export declare const saveUploadedFileLocally: (fileBuffer: Buffer, folder: "job_portal/resumes" | "job_portal/applications", originalFilename: string, userId?: string) => Promise<string>;
+//# sourceMappingURL=localFileStorage.d.ts.map

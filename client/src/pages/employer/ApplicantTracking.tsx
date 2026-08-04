@@ -16,6 +16,13 @@ type ApplicantRow = {
   };
 };
 
+const normalizeResumeUrl = (url: string) =>
+  url.replace('/raw/raw/upload/', '/raw/upload/').replace('/image/image/upload/', '/image/upload/');
+
+const getResumeViewUrl = (url: string) => normalizeResumeUrl(url);
+const getResumeDownloadUrl = (url: string) =>
+  normalizeResumeUrl(url).replace('/raw/upload/', '/raw/upload/fl_attachment/');
+
 export const ApplicantTracking = () => {
   const { jobId } = useParams();
   const queryClient = useQueryClient();
@@ -76,7 +83,8 @@ export const ApplicantTracking = () => {
                 </td>
                 <td className="p-4 text-slate-300">{new Date(app.createdAt).toLocaleDateString()}</td>
                 <td className="p-4">
-                  <a href={app.resumeUrl} target="_blank" rel="noreferrer" className="block text-cyan-300 hover:underline">Resume PDF</a>
+                  <a href={getResumeViewUrl(app.resumeUrl)} target="_blank" rel="noreferrer" className="block text-cyan-300 hover:underline">View Resume PDF</a>
+                  <a href={getResumeDownloadUrl(app.resumeUrl)} download="resume.pdf" target="_blank" rel="noreferrer" className="mt-2 block text-xs text-cyan-300 underline">Download Resume</a>
                   <button onClick={() => alert(app.coverLetter)} className="mt-2 text-xs text-slate-400 underline">Read cover letter</button>
                 </td>
                 <td className="p-4">

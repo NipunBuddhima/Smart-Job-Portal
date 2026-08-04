@@ -9,6 +9,7 @@ interface User {
   role: 'candidate' | 'employer' | 'admin';
   avatar?: string;
   resume?: string;
+  resumeName?: string;
   skills?: string[];
   education?: Array<{
     institution: string;

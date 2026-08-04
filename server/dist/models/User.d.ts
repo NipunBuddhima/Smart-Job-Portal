@@ -25,6 +25,7 @@ export interface IUser extends Document {
     role: 'candidate' | 'employer' | 'admin';
     avatar?: string;
     resume?: string;
+    resumeName?: string;
     skills?: string[];
     education?: IEducationEntry[];
     experience?: IExperienceEntry[];

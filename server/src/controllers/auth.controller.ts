@@ -10,6 +10,7 @@ const buildUserResponse = (user: any) => ({
   role: user.role,
   avatar: user.avatar,
   resume: user.resume,
+  resumeName: user.resumeName ?? '',
   skills: user.skills ?? [],
   education: user.education ?? [],
   experience: user.experience ?? [],

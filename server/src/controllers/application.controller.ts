@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import Application from '../models/Application';
 import Job from '../models/Job';
-import { uploadToCloudinary } from '../utils/cloudinary';
 import { AppError } from '../middleware/errorHandler';
+import { saveUploadedFileLocally } from '../utils/localFileStorage';
 
 const allowedApplicationStatuses = ['pending', 'reviewed', 'shortlisted', 'rejected', 'accepted'] as const;
 
@@ -34,7 +34,12 @@ export const applyForJob = async (req: Request, res: Response, next: NextFunctio
 
     // If candidate uploads a tailored resume just for this application
     if (req.file) {
-      finalResumeUrl = await uploadToCloudinary(req.file.buffer, 'job_portal/applications', 'raw');
+      finalResumeUrl = await saveUploadedFileLocally(
+        req.file.buffer,
+        'job_portal/applications',
+        req.file.originalname,
+        req.user.id
+      );
     }
 
     if (!finalResumeUrl) return next(new AppError('A resume is required to apply', 400));

@@ -16,6 +16,13 @@ type CandidateApplication = {
   };
 };
 
+const normalizeResumeUrl = (url: string) =>
+  url.replace('/raw/raw/upload/', '/raw/upload/').replace('/image/image/upload/', '/image/upload/');
+
+const getResumeViewUrl = (url: string) => normalizeResumeUrl(url);
+const getResumeDownloadUrl = (url: string) =>
+  normalizeResumeUrl(url).replace('/raw/upload/', '/raw/upload/fl_attachment/');
+
 export const AppliedJobs = () => {
   const queryClient = useQueryClient();
 
@@ -69,8 +76,11 @@ export const AppliedJobs = () => {
             </div>
             
             <div className="mt-4 flex flex-wrap items-center gap-3 md:mt-0">
-              <a href={app.resumeUrl} target="_blank" rel="noreferrer" className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+              <a href={getResumeViewUrl(app.resumeUrl)} target="_blank" rel="noreferrer" className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10">
                 View Submitted Resume
+              </a>
+              <a href={getResumeDownloadUrl(app.resumeUrl)} download="resume.pdf" target="_blank" rel="noreferrer" className="rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-400/20">
+                Download Resume
               </a>
               {app.status === 'pending' && (
                 <button 
