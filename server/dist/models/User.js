@@ -78,6 +78,8 @@ const userSchema = new mongoose_1.Schema({
     companyDescription: { type: String, trim: true, default: '' },
     website: { type: String, trim: true, default: '' },
     companyLogo: { type: String, default: '' },
+    resetPasswordToken: { type: String, default: '' },
+    resetPasswordExpire: { type: Date, default: null },
 }, { timestamps: true });
 // Hash password before saving
 userSchema.pre('save', async function (next) {

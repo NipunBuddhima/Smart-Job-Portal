@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 import app from './app';
 import { connectDB } from './config/db';
 import logger from './utils/logger';
+import http from 'http';
+import { initSocket } from './utils/socket';
 
 // Load environment variables immediately
 dotenv.config();
@@ -12,9 +14,18 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
 
-  const server = app.listen(PORT, () => {
-    logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+ // Create HTTP server wrapping the Express app
+const server = http.createServer(app);
+
+// Initialize Socket.io
+initSocket(server);
+
+connectDB().then(() => {
+  // Listen on the HTTP server, NOT the Express app
+  server.listen(PORT, () => {
+    logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
   });
+});
 
   // Catch unhandled promise rejections (e.g., bad DB credentials)
   process.on('unhandledRejection', (err: Error) => {

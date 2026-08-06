@@ -40,6 +40,8 @@ export interface IUser extends Document {
   companyDescription?: string;
   website?: string;
   companyLogo?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -96,6 +98,8 @@ const userSchema = new Schema<IUser>(
     companyDescription: { type: String, trim: true, default: '' },
     website: { type: String, trim: true, default: '' },
     companyLogo: { type: String, default: '' },
+    resetPasswordToken: { type: String, default: '' },
+    resetPasswordExpire: { type: Date, default: null },
   },
   { timestamps: true }
 );

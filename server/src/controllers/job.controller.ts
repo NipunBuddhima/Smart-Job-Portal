@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import Job from '../models/Job';
 import User from '../models/User';
+import Notification from '../models/Notification';
 import { AppError } from '../middleware/errorHandler';
+import { broadcastNotification } from '../utils/socket';
 
 const buildUserResponse = (user: any) => ({
   id: user._id,
@@ -102,6 +104,18 @@ export const createJob = async (req: Request, res: Response, next: NextFunction)
     });
 
     const populatedJob = await Job.findById(job._id).populate('employerId', 'name avatar companyName companyLogo');
+
+    await Notification.create({
+      userId: req.user.id,
+      message: `New job posted: ${job.title}.`,
+      type: 'info',
+      read: false,
+    });
+
+    broadcastNotification({
+      message: `New job posted: ${job.title}.`,
+      type: 'info',
+    });
 
     res.status(201).json({ success: true, data: buildJobResponse(populatedJob) });
   } catch (error) {

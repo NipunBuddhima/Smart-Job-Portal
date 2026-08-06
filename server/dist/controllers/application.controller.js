@@ -6,8 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateApplicationStatus = exports.getJobApplicants = exports.withdrawApplication = exports.getCandidateApplications = exports.applyForJob = void 0;
 const Application_1 = __importDefault(require("../models/Application"));
 const Job_1 = __importDefault(require("../models/Job"));
+const User_1 = __importDefault(require("../models/User"));
+const Notification_1 = __importDefault(require("../models/Notification"));
 const errorHandler_1 = require("../middleware/errorHandler");
 const localFileStorage_1 = require("../utils/localFileStorage");
+const email_1 = require("../utils/email");
+const socket_1 = require("../utils/socket");
 const allowedApplicationStatuses = ['pending', 'reviewed', 'shortlisted', 'rejected', 'accepted'];
 const parseApplicationStatus = (value) => {
     if (typeof value !== 'string') {
@@ -43,6 +47,20 @@ const applyForJob = async (req, res, next) => {
             candidateId: req.user.id,
             resumeUrl: finalResumeUrl,
             coverLetter,
+        });
+        const candidate = await User_1.default.findById(req.user.id).select('email name');
+        const employer = await User_1.default.findById(job.employerId).select('name companyName email');
+        const employerName = employer?.companyName || employer?.name || 'the employer';
+        await (0, email_1.sendEmail)(candidate?.email || '', 'Application confirmed', email_1.emailTemplates.applicationConfirmation(job.title, employerName));
+        await Notification_1.default.create({
+            userId: req.user.id,
+            message: `Application submitted for ${job.title}.`,
+            type: 'success',
+            read: false,
+        });
+        (0, socket_1.sendRealTimeNotification)(req.user.id, {
+            message: `Application submitted for ${job.title}.`,
+            type: 'success',
         });
         res.status(201).json({ success: true, data: application });
     }
@@ -119,6 +137,35 @@ const updateApplicationStatus = async (req, res, next) => {
         }
         application.status = parsedStatus;
         await application.save();
+        await application.populate('candidateId', 'name email');
+        await application.populate('jobId', 'title employerId');
+        const candidate = application.candidateId;
+        const jobDetails = application.jobId;
+        const employer = await User_1.default.findById(jobDetails.employerId).select('companyName name');
+        const employerName = employer?.companyName || employer?.name || 'the employer';
+        if (parsedStatus === 'shortlisted') {
+            await (0, email_1.sendEmail)(candidate.email, 'Interview Invitation', email_1.emailTemplates.interviewInvitation(jobDetails.title, employerName));
+        }
+        if (parsedStatus === 'accepted' || parsedStatus === 'rejected') {
+            await (0, email_1.sendEmail)(candidate.email, `Application ${parsedStatus}`, email_1.emailTemplates.statusUpdate(jobDetails.title, employerName, parsedStatus));
+        }
+        const notificationMessage = parsedStatus === 'accepted'
+            ? `Your application for ${jobDetails.title} has been accepted.`
+            : parsedStatus === 'rejected'
+                ? `Your application for ${jobDetails.title} has been rejected.`
+                : parsedStatus === 'shortlisted'
+                    ? `You have been shortlisted for ${jobDetails.title}.`
+                    : `Your application for ${jobDetails.title} is now ${parsedStatus}.`;
+        await Notification_1.default.create({
+            userId: candidate._id,
+            message: notificationMessage,
+            type: parsedStatus === 'rejected' ? 'warning' : 'success',
+            read: false,
+        });
+        (0, socket_1.sendRealTimeNotification)(candidate._id.toString(), {
+            message: notificationMessage,
+            type: parsedStatus === 'rejected' ? 'warning' : 'success',
+        });
         res.status(200).json({ success: true, data: application });
     }
     catch (error) {

@@ -1,7 +1,9 @@
+import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import { generateTokens } from '../utils/jwt';
 import { AppError } from '../middleware/errorHandler';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const buildUserResponse = (user: any) => ({
   id: user._id,
@@ -63,7 +65,65 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       password,
       role: normalizedRole,
     });
+
+    await sendEmail(normalizedEmail, 'Welcome to Smart Job Portal', emailTemplates.registration(normalizedName));
     sendTokenResponse(user, 201, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+
+    if (!email) {
+      return next(new AppError('Please provide an email address', 400));
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(200).json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
+    await user.save();
+
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    await sendEmail(email, 'Reset your Smart Job Portal password', emailTemplates.passwordReset(resetUrl));
+
+    res.status(200).json({ success: true, message: 'Password reset email sent successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token || !password) {
+      return next(new AppError('Invalid reset token or missing password', 400));
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpire: { $gt: Date.now() },
+    }).select('+password');
+
+    if (!user) {
+      return next(new AppError('Invalid or expired reset token', 400));
+    }
+
+    user.password = password;
+    user.resetPasswordToken = '';
+    user.resetPasswordExpire = new Date(0);
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password reset successful' });
   } catch (error) {
     next(error);
   }

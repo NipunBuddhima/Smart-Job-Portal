@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMe = exports.logout = exports.login = exports.register = void 0;
+exports.getMe = exports.logout = exports.login = exports.resetPassword = exports.forgotPassword = exports.register = void 0;
+const crypto_1 = __importDefault(require("crypto"));
 const User_1 = __importDefault(require("../models/User"));
 const jwt_1 = require("../utils/jwt");
 const errorHandler_1 = require("../middleware/errorHandler");
+const email_1 = require("../utils/email");
 const buildUserResponse = (user) => ({
     id: user._id,
     name: user.name,
@@ -60,6 +62,7 @@ const register = async (req, res, next) => {
             password,
             role: normalizedRole,
         });
+        await (0, email_1.sendEmail)(normalizedEmail, 'Welcome to Smart Job Portal', email_1.emailTemplates.registration(normalizedName));
         sendTokenResponse(user, 201, res);
     }
     catch (error) {
@@ -67,6 +70,54 @@ const register = async (req, res, next) => {
     }
 };
 exports.register = register;
+const forgotPassword = async (req, res, next) => {
+    try {
+        const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+        if (!email) {
+            return next(new errorHandler_1.AppError('Please provide an email address', 400));
+        }
+        const user = await User_1.default.findOne({ email });
+        if (!user) {
+            return res.status(200).json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+        }
+        const resetToken = crypto_1.default.randomBytes(32).toString('hex');
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
+        await user.save();
+        const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+        await (0, email_1.sendEmail)(email, 'Reset your Smart Job Portal password', email_1.emailTemplates.passwordReset(resetUrl));
+        res.status(200).json({ success: true, message: 'Password reset email sent successfully' });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.forgotPassword = forgotPassword;
+const resetPassword = async (req, res, next) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+        if (!token || !password) {
+            return next(new errorHandler_1.AppError('Invalid reset token or missing password', 400));
+        }
+        const user = await User_1.default.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpire: { $gt: Date.now() },
+        }).select('+password');
+        if (!user) {
+            return next(new errorHandler_1.AppError('Invalid or expired reset token', 400));
+        }
+        user.password = password;
+        user.resetPasswordToken = '';
+        user.resetPasswordExpire = new Date(0);
+        await user.save();
+        res.status(200).json({ success: true, message: 'Password reset successful' });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.resetPassword = resetPassword;
 const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;

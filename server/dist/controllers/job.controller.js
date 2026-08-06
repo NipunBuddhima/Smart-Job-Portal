@@ -6,7 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.unsaveJob = exports.saveJob = exports.draftJob = exports.closeJob = exports.deleteJob = exports.updateJob = exports.getJobById = exports.getJobs = exports.createJob = void 0;
 const Job_1 = __importDefault(require("../models/Job"));
 const User_1 = __importDefault(require("../models/User"));
+const Notification_1 = __importDefault(require("../models/Notification"));
 const errorHandler_1 = require("../middleware/errorHandler");
+const socket_1 = require("../utils/socket");
 const buildUserResponse = (user) => ({
     id: user._id,
     name: user.name,
@@ -93,6 +95,16 @@ const createJob = async (req, res, next) => {
             status: parseStatus(req.body.status) || 'published',
         });
         const populatedJob = await Job_1.default.findById(job._id).populate('employerId', 'name avatar companyName companyLogo');
+        await Notification_1.default.create({
+            userId: req.user.id,
+            message: `New job posted: ${job.title}.`,
+            type: 'info',
+            read: false,
+        });
+        (0, socket_1.broadcastNotification)({
+            message: `New job posted: ${job.title}.`,
+            type: 'info',
+        });
         res.status(201).json({ success: true, data: buildJobResponse(populatedJob) });
     }
     catch (error) {

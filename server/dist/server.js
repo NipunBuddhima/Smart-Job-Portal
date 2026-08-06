@@ -7,14 +7,23 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const app_1 = __importDefault(require("./app"));
 const db_1 = require("./config/db");
 const logger_1 = __importDefault(require("./utils/logger"));
+const http_1 = __importDefault(require("http"));
+const socket_1 = require("./utils/socket");
 // Load environment variables immediately
 dotenv_1.default.config();
 const PORT = process.env.PORT || 5000;
 // Connect to the database before starting the server
 const startServer = async () => {
     await (0, db_1.connectDB)();
-    const server = app_1.default.listen(PORT, () => {
-        logger_1.default.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    // Create HTTP server wrapping the Express app
+    const server = http_1.default.createServer(app_1.default);
+    // Initialize Socket.io
+    (0, socket_1.initSocket)(server);
+    (0, db_1.connectDB)().then(() => {
+        // Listen on the HTTP server, NOT the Express app
+        server.listen(PORT, () => {
+            logger_1.default.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+        });
     });
     // Catch unhandled promise rejections (e.g., bad DB credentials)
     process.on('unhandledRejection', (err) => {

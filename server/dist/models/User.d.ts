@@ -35,6 +35,8 @@ export interface IUser extends Document {
     companyDescription?: string;
     website?: string;
     companyLogo?: string;
+    resetPasswordToken?: string;
+    resetPasswordExpire?: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
 }
 declare const _default: mongoose.Model<IUser, {}, {}, {}, mongoose.Document<unknown, {}, IUser, {}, {}> & IUser & Required<{

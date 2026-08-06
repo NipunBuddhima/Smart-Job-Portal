@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, logout, getMe } from '../controllers/auth.controller';
+import { register, login, logout, getMe, forgotPassword, resetPassword } from '../controllers/auth.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -7,6 +7,8 @@ const router = Router();
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', logout);
+router.post('/forgot-password', forgotPassword);
+router.put('/reset-password/:token', resetPassword);
 
 // Protected route example
 router.get('/me', protect, getMe);
